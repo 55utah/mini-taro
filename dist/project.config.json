@@ -1,0 +1,13 @@
+{
+  "miniprogramRoot": ".",
+  "projectname": "xxx",
+  "description": "小程序",
+  "appid": "cli_xxx",
+  "setting": {
+    "urlCheck": true,
+    "es6": false,
+    "postcss": false,
+    "minified": false
+  },
+  "compileType": "miniprogram"
+}

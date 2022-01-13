@@ -1,0 +1,12 @@
+.wrapper {
+  color: black;
+  margin: 10px 10px;
+  text-align: center;
+}
+
+.inline-block {
+  display: inline-flex;
+  justify-content: space-between;
+  width: 100%;
+  margin: 10px;
+}
