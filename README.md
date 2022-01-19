@@ -1,15 +1,86 @@
 ## mini-taro 实现一个react版本的Taro原型
-#### 基础说明
+> 本项目以700行左右的代码量，实现了一套Taro运行时原型，可以帮助使用者理解Taro原理，构建自己的Taro原型；
 
-1. 编译层尽量mock，所以产物dist文件夹内只有app.js和各页面的index.js，venders.js这些是webpack编译生成的，其他是固定的。
-2. 源码内app.ts/index.ts/index2.ts分别是小程序入口、页面1、页面2。
-3. 页面在src/pages内，目前只跑通了class组件。
-4. 小程序支持列表渲染+增删、基本事件处理、style、className支持；
+#### 能力说明
 
+1. 基本运行时能力与Taro接近，支持将多个React语法构建的页面渲染到小程序上；
+2. 支持React类组件和函数组件；支持使用css样式；
+3. mini-taro侧重于运行时，构建层做简单实现；
+
+#### 文件夹层级说明
+```
+/* 核心文件夹 */
+-dist  // 产物文件夹
+-demo  // demo页面React组件、应用配置文件夹
+-src  // 本项目实现的Taro原型运行时核心代码
+
+/* 其他文件夹 */
+-build   // 构建辅助文件夹（相当于loader）
+-scripts  // 打包脚本/模版文件
+
+```
 #### 体验
 
-yarn build编译后，使用IDE打开dist文件夹。
+1. 安装依赖（npm install或yarn）；
+2. yarn build构建，生成/更新dist文件夹，使用小程序IDE预览dist文件即可；
 
 #### 效果
 
+1. 渲染出的小程序页面
+
 <img src="https://user-images.githubusercontent.com/17704150/149286811-945474f4-3dec-425e-8652-b492fe0765c6.png" width="200" />
+
+2. 对应的React页面组件
+
+```
+import React, { FC, useState } from 'react'
+import { View, Text, Button, Input } from '@/index'
+
+import './index.css'
+
+export const EntryPage: FC = () => {
+
+  const [name, setName] = useState('')
+  const [count, setCount] = useState(0)
+  const [list, setList] = useState([
+    { key: 1, value: '这是第1个' },
+    { key: 2, value: '这是第2个' },
+    { key: 3, value: '这是第3个' },
+  ])
+
+  const increment = () => {
+    setCount((val) => val + 1)
+  }
+
+  const changeName = (e: any) => {
+    const value = e?.detail?.value || ''
+    setName(value)
+  }
+  
+  // ... 省略
+
+  return (
+    <View className="wrapper">
+      <View style={{ color: 'blue' }}>
+        <Text style={{ fontSize: '25px', fontWeight: '600' }}>style样式</Text>
+        <Text className="class-sample">css样式</Text>
+      </View>
+      <!-- ...省略 -->
+      <View style={{ margin: '20px 0' }}>
+        <Text>count: {count}</Text>
+        <Button onClick={() => increment()} type="primary">
+          数字加一
+        </Button>
+      </View>
+      <View>
+        <Text>name: {name}</Text>
+        <Input
+          style={{ border: '1px solid blue' }}
+          onInput={(e) => changeName(e)}
+        />
+      </View>
+    </View>
+  )
+}
+
+```
