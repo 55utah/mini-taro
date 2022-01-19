@@ -9,3 +9,7 @@
 #### 体验
 
 yarn build编译后，使用IDE打开dist文件夹。
+
+#### 效果
+
+<img src="https://user-images.githubusercontent.com/17704150/149286811-945474f4-3dec-425e-8652-b492fe0765c6.png" width="200" />
