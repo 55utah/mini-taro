@@ -29,7 +29,7 @@ module.exports = {
   output: {
     path: path.resolve(__dirname, 'dist'),
     filename: '[name].js',
-    // 这个要设置下全局对象！ 不然跑不起来
+    // 对应小程序的全局对象，比如微信小程序是'wx'
     globalObject: 'tt',
     asyncChunks: false,
   },
@@ -53,6 +53,7 @@ module.exports = {
     new MiniCssExtractPlugin({
       filename: "[name].ttss",
     }),
+    // 模拟Taro构建出小程序文件的过程
     new CopyPlugin({
       patterns: [
         {
