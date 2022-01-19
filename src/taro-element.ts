@@ -31,10 +31,6 @@ export class TaroElement {
     this.text = text
   }
 
-  // dispatchEvent(e: any) {
-  //   console.warn('event', e)
-  // }
-
   private onAttributeUpdate() {
     if (!this.parentNode) return
     const index = this.parentNode.children?.findIndex((p) => p.id === this.id)
@@ -160,17 +156,17 @@ export class TaroRootElement extends TaroElement {
   public enqueueUpdate (payload: UpdatePayload) {
     this.updatePayloads.push(payload)
 
+    console.warn('updatePayloads', [...this.updatePayloads])
+  
     if (!this.pendingUpdate && this.ctx !== null) {
       this.performUpdate()
     }
-
-    console.warn('updatePayloads', [...this.updatePayloads])
   }
 
   public performUpdate() {
     this.pendingUpdate = true
 
-    // TODO 将所有的payloads合并为setData的一个参数，传给setData
+    // TODO 这里可以优化，将所有的复杂payloads合并为最小payloads，传给setData
     const elements: UpdatePayload[] = []
     while(this.updatePayloads.length > 0) {
       const item = this.updatePayloads.shift()!

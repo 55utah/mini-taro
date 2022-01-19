@@ -10,11 +10,6 @@ enum NodeType {
 
 type Props = Record<string, unknown>
 
-type MiniPage = {
-  setData: (...params: any) => void,
-  data: Record<string, unknown>
-}
-
 
 export interface MpInstance {
   config: Record<string, unknown>
@@ -42,7 +37,7 @@ export interface MiniElementData {
   [key: string]: unknown
 }
 
-interface MiniTextData {
+export interface MiniTextData {
   [Short.Text]: string
   [Short.NodeName]: string
 }
@@ -54,5 +49,4 @@ export type NodeName = 'view' | 'text' | '#text' | 'button'
 export {
   NodeType,
   Props,
-  MiniPage,
 }

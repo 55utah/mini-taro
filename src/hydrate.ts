@@ -6,6 +6,12 @@ const isEmpty = (children: any[] | undefined) => {
   return !children || (Array.isArray(children) && children.length === 0)
 }
 
+/**
+ * 
+ * 这个函数是将虚拟dom树转为了渲染属性树
+ * @param node 
+ * @returns 
+ */
 export const hydrate = (node: TaroElement): MiniData => {
   if (node.type === NodeType.TEXT && isEmpty(node.children)) {
     return {

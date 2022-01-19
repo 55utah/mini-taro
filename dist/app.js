@@ -1,12 +1,39 @@
-require('./vendors.js'); 
-/******/ (() => { // webpackBootstrap
-/******/ 	"use strict";
-/******/ 	var __webpack_modules__ = ({
+require('./vendors.js');
+require('./runtime.js');
 
-/***/ "./app.ts":
-/*!****************!*\
-  !*** ./app.ts ***!
-  \****************/
+"use strict";
+(tt["webpackChunkmini_taro"] = tt["webpackChunkmini_taro"] || []).push([["app"],{
+
+/***/ "./build/app.ts":
+/*!**********************!*\
+  !*** ./build/app.ts ***!
+  \**********************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+const app_1 = __importDefault(__webpack_require__(/*! ../demo/app */ "./demo/app.ts"));
+const index_1 = __webpack_require__(/*! @/index */ "./src/index.ts");
+/**
+ *
+ * 这里在编译后的结果里面需要将
+ * require('./vendors.js');
+ * require('./runtime.js');
+ * 放在顶层
+ * 让app.js立即执行
+ */
+App((0, index_1.createAppConfig)(app_1.default));
+
+
+/***/ }),
+
+/***/ "./demo/app.ts":
+/*!*********************!*\
+  !*** ./demo/app.ts ***!
+  \*********************/
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -15,7 +42,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const react_1 = __importDefault(__webpack_require__(/*! react */ "./node_modules/react/index.js"));
-const createAppConfig_1 = __webpack_require__(/*! ./src/createAppConfig */ "./src/createAppConfig.ts");
 class AppComp extends react_1.default.Component {
     componentDidMount() {
         // ...
@@ -32,19 +58,11 @@ class AppComp extends react_1.default.Component {
     componentDidCatchError() {
         // ...
     }
-    // 在 App 类中的 render() 函数没有实际作用
-    // 请勿修改此函数
     render() {
         return react_1.default.createElement('view', {}, this.props.children);
     }
 }
-/**
- *
- * 这里在编译后的结果里面需要将
- * require('./vendors.js');
- * 放在顶层
- */
-App((0, createAppConfig_1.createAppConfig)(AppComp));
+exports["default"] = AppComp;
 
 
 /***/ }),
@@ -60,21 +78,26 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getTaroRootElementByUid = exports.createAppConfig = exports.PageContext = void 0;
+exports.getTaroRootElementByUid = exports.createAppConfig = void 0;
 const react_1 = __importDefault(__webpack_require__(/*! react */ "./node_modules/react/index.js"));
 const interface_1 = __webpack_require__(/*! ./interface */ "./src/interface.ts");
 const render_1 = __webpack_require__(/*! ./render */ "./src/render.ts");
 const taro_element_1 = __webpack_require__(/*! ./taro-element */ "./src/taro-element.ts");
-exports.PageContext = {};
+const EMPTY_OBJ = {};
+let PageContext = EMPTY_OBJ;
 const RootElement = new taro_element_1.TaroElement({ id: Infinity, props: {}, nodeName: 'view', type: interface_1.NodeType.ROOT });
 const h = react_1.default.createElement;
 const connectReactPage = (id) => {
     return (component) => {
+        if (PageContext === EMPTY_OBJ) {
+            PageContext = react_1.default.createContext('');
+        }
         return class Page extends react_1.default.Component {
             componentDidCatch(err) {
                 console.error('page global error: ', err);
             }
             render() {
+                // 名称是'root'的dom节点就是页面顶层节点了
                 return h('root', { uid: id }, h(component, {}));
             }
         };
@@ -95,16 +118,17 @@ const createAppConfig = (App) => {
             // 强制更新一次
             this.forceUpdate(cb);
         }
-        // public unmount (id: string, cb: () => void) {
-        //   const 
-        //   this.forceUpdate(cb)
-        // }
+        unmount(id, cb) {
+            const idx = this.elements.findIndex(item => item.props.tid === id);
+            this.elements.splice(idx, 1);
+            this.forceUpdate(cb);
+        }
         render() {
             while (this.pages.length > 0) {
                 const page = this.pages.pop();
                 this.elements.push(page());
             }
-            let props = null;
+            const props = null;
             return react_1.default.createElement(App, props, this.elements.slice());
         }
     }
@@ -112,19 +136,21 @@ const createAppConfig = (App) => {
     const createConfig = () => {
         // app的配置不能是一个复杂对象。。
         const config = Object.create({
-            render: function (cb) {
-                wrapper.forceUpdate(cb);
-            },
             mount: function (component, id, cb) {
                 const page = connectReactPage(id)(component);
                 wrapper.mount(page, id, cb);
+            },
+            unmount: function (id, cb) {
+                wrapper.unmount(id, cb);
             },
             onLaunch: function (options) {
                 console.warn('app onLaunch');
             },
             onShow: function (options) {
+                //
             },
             onHide: function () {
+                //
             },
             onError: function (msg) {
                 console.log('app error', msg);
@@ -161,18 +187,131 @@ exports.getTaroRootElementByUid = getTaroRootElementByUid;
 
 /***/ }),
 
+/***/ "./src/createPageConfig.ts":
+/*!*********************************!*\
+  !*** ./src/createPageConfig.ts ***!
+  \*********************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.createPageConfig = void 0;
+const createAppConfig_1 = __webpack_require__(/*! ./createAppConfig */ "./src/createAppConfig.ts");
+const createPageConfig = (Component, initData, pageConfig) => {
+    const { path } = pageConfig;
+    const pageUid = path;
+    let app = null;
+    try {
+        app = getApp();
+    }
+    catch (e) {
+        console.error(e);
+    }
+    const getPageElement = () => {
+        const rootElement = app.getTree();
+        return (0, createAppConfig_1.getTaroRootElementByUid)(rootElement, pageUid);
+    };
+    // 所有事件汇总到一个方法上
+    const eventHandler = (e) => {
+        var _a;
+        // 这里要使用currentTarget避免被冒泡影响
+        const { type, currentTarget = {} } = e || {};
+        const { id = '' } = currentTarget;
+        const pageElement = getPageElement();
+        if (id && (pageElement === null || pageElement === void 0 ? void 0 : pageElement.ctx)) {
+            const ctx = pageElement === null || pageElement === void 0 ? void 0 : pageElement.ctx;
+            let propKey = '';
+            //  简单处理下事件，不做深入处理
+            switch (type) {
+                case 'tap':
+                    propKey = 'onClick';
+                    break;
+                case 'input':
+                    propKey = 'onInput';
+                    break;
+                default: break;
+            }
+            if (propKey) {
+                const data = getMiniDataByUid((_a = ctx === null || ctx === void 0 ? void 0 : ctx.data) === null || _a === void 0 ? void 0 : _a.root, id);
+                const fn = data[propKey];
+                typeof fn === 'function' && fn(e);
+            }
+        }
+    };
+    const createConfig = () => {
+        const config = Object.create({
+            element: Component,
+            data: initData,
+            onLoad: function (options) {
+                console.warn('page onLoad', options);
+                // 小程序page实例
+                const page = this;
+                this.$taroPath = pageUid;
+                app && app.mount(Component, this.$taroPath, () => {
+                    const pageElement = getPageElement();
+                    if (pageElement) {
+                        pageElement.ctx = page;
+                        pageElement.performUpdate();
+                    }
+                });
+            },
+            onShow: func('onShow'),
+            onHide: func('onHide'),
+            onReady: func('onReady'),
+            onUnload: function () {
+                app && app.unmount(pageUid, () => {
+                    console.warn(`page: ${pageUid} unmount`);
+                });
+            },
+            eh: eventHandler
+        });
+        return config;
+    };
+    return createConfig();
+};
+exports.createPageConfig = createPageConfig;
+function func(name) {
+    // 这里可以将小程序生命周期与react生命周期对应
+    return function (params) {
+        console.warn(name, params);
+    };
+}
+function getMiniDataByUid(root, uid) {
+    var _a, _b;
+    const queue = [];
+    queue.push(...((root === null || root === void 0 ? void 0 : root.cn) || []));
+    let target = undefined;
+    while (queue.length > 0) {
+        const t = queue.shift();
+        if (((_a = t) === null || _a === void 0 ? void 0 : _a.uid) === uid) {
+            target = t;
+            break;
+        }
+        else {
+            (_b = t.cn) === null || _b === void 0 ? void 0 : _b.map((item) => queue.push(item));
+        }
+    }
+    return target;
+}
+
+
+/***/ }),
+
 /***/ "./src/host-config.ts":
 /*!****************************!*\
   !*** ./src/host-config.ts ***!
   \****************************/
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
 // 这边要借助 react-reconciler 实现一套虚拟dom树的系统
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ReactReconciler = exports.TaroReconciler = exports.updateProps = void 0;
-const ReactReconciler = __webpack_require__(/*! react-reconciler */ "./node_modules/react-reconciler/index.js");
-exports.ReactReconciler = ReactReconciler;
+const react_reconciler_1 = __importDefault(__webpack_require__(/*! react-reconciler */ "./node_modules/react-reconciler/index.js"));
+exports.ReactReconciler = react_reconciler_1.default;
 const interface_1 = __webpack_require__(/*! ./interface */ "./src/interface.ts");
 const util_1 = __webpack_require__(/*! ./util */ "./src/util.ts");
 const taro_element_1 = __webpack_require__(/*! ./taro-element */ "./src/taro-element.ts");
@@ -304,13 +443,8 @@ const hostConfig = {
     isPrimaryRenderer: true,
     supportsHydration: false
 };
-const TaroReconciler = ReactReconciler(hostConfig);
+const TaroReconciler = (0, react_reconciler_1.default)(hostConfig);
 exports.TaroReconciler = TaroReconciler;
-TaroReconciler.injectIntoDevTools({
-    bundleType: 1,
-    version: '0.0.1',
-    rendererPackageName: 'mini-taro'
-});
 
 
 /***/ }),
@@ -339,6 +473,12 @@ const interface_1 = __webpack_require__(/*! ./interface */ "./src/interface.ts")
 const isEmpty = (children) => {
     return !children || (Array.isArray(children) && children.length === 0);
 };
+/**
+ *
+ * 这个函数是将虚拟dom树转为了渲染属性树
+ * @param node
+ * @returns
+ */
 const hydrate = (node) => {
     if (node.type === interface_1.NodeType.TEXT && isEmpty(node.children)) {
         return {
@@ -373,6 +513,34 @@ exports.styleTransform = styleTransform;
 
 /***/ }),
 
+/***/ "./src/index.ts":
+/*!**********************!*\
+  !*** ./src/index.ts ***!
+  \**********************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __exportStar = (this && this.__exportStar) || function(m, exports) {
+    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.createAppConfig = exports.createPageConfig = void 0;
+var createPageConfig_1 = __webpack_require__(/*! ./createPageConfig */ "./src/createPageConfig.ts");
+Object.defineProperty(exports, "createPageConfig", ({ enumerable: true, get: function () { return createPageConfig_1.createPageConfig; } }));
+var createAppConfig_1 = __webpack_require__(/*! ./createAppConfig */ "./src/createAppConfig.ts");
+Object.defineProperty(exports, "createAppConfig", ({ enumerable: true, get: function () { return createAppConfig_1.createAppConfig; } }));
+__exportStar(__webpack_require__(/*! ./native-components */ "./src/native-components.ts"), exports);
+
+
+/***/ }),
+
 /***/ "./src/interface.ts":
 /*!**************************!*\
   !*** ./src/interface.ts ***!
@@ -390,6 +558,46 @@ var NodeType;
     NodeType[NodeType["VIEW"] = 2] = "VIEW";
 })(NodeType || (NodeType = {}));
 exports.NodeType = NodeType;
+
+
+/***/ }),
+
+/***/ "./src/native-components.ts":
+/*!**********************************!*\
+  !*** ./src/native-components.ts ***!
+  \**********************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+// 基础组件实现
+// 原生组件实际就是react组件，名称上与小程序组件对齐
+var __rest = (this && this.__rest) || function (s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                t[p[i]] = s[p[i]];
+        }
+    return t;
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Input = exports.Button = exports.Text = exports.View = void 0;
+const react_1 = __importDefault(__webpack_require__(/*! react */ "./node_modules/react/index.js"));
+const createNativeComponent = (name, props) => {
+    return (params) => {
+        const _a = params || {}, { children } = _a, nextParams = __rest(_a, ["children"]);
+        return react_1.default.createElement(name, Object.assign({}, nextParams), children);
+    };
+};
+exports.View = createNativeComponent('view', {});
+exports.Text = createNativeComponent('text', {});
+exports.Button = createNativeComponent('button', {});
+exports.Input = createNativeComponent('input', {});
 
 
 /***/ }),
@@ -427,6 +635,7 @@ exports.render = render;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Short = exports.RootName = void 0;
 exports.RootName = 'root';
+// 这里使用Taro的缩写
 var Short;
 (function (Short) {
     Short["Container"] = "container";
@@ -464,9 +673,6 @@ class TaroElement {
         this.children = children;
         this.text = text;
     }
-    // dispatchEvent(e: any) {
-    //   console.warn('event', e)
-    // }
     onAttributeUpdate() {
         var _a, _b, _c;
         if (!this.parentNode)
@@ -577,14 +783,14 @@ class TaroRootElement extends TaroElement {
     }
     enqueueUpdate(payload) {
         this.updatePayloads.push(payload);
+        console.warn('updatePayloads', [...this.updatePayloads]);
         if (!this.pendingUpdate && this.ctx !== null) {
             this.performUpdate();
         }
-        console.warn('updatePayloads', [...this.updatePayloads]);
     }
     performUpdate() {
         this.pendingUpdate = true;
-        // TODO 将所有的payloads合并为setData的一个参数，传给setData
+        // TODO 这里可以优化，将所有的复杂payloads合并为最小payloads，传给setData
         const elements = [];
         while (this.updatePayloads.length > 0) {
             const item = this.updatePayloads.shift();
@@ -641,146 +847,11 @@ exports.NodeTypeMap = {
 
 /***/ })
 
-/******/ 	});
-/************************************************************************/
-/******/ 	// The module cache
-/******/ 	var __webpack_module_cache__ = {};
-/******/ 	
-/******/ 	// The require function
-/******/ 	function __webpack_require__(moduleId) {
-/******/ 		// Check if module is in cache
-/******/ 		var cachedModule = __webpack_module_cache__[moduleId];
-/******/ 		if (cachedModule !== undefined) {
-/******/ 			return cachedModule.exports;
-/******/ 		}
-/******/ 		// Create a new module (and put it into the cache)
-/******/ 		var module = __webpack_module_cache__[moduleId] = {
-/******/ 			id: moduleId,
-/******/ 			loaded: false,
-/******/ 			exports: {}
-/******/ 		};
-/******/ 	
-/******/ 		// Execute the module function
-/******/ 		__webpack_modules__[moduleId].call(module.exports, module, module.exports, __webpack_require__);
-/******/ 	
-/******/ 		// Flag the module as loaded
-/******/ 		module.loaded = true;
-/******/ 	
-/******/ 		// Return the exports of the module
-/******/ 		return module.exports;
-/******/ 	}
-/******/ 	
-/******/ 	// expose the modules object (__webpack_modules__)
-/******/ 	__webpack_require__.m = __webpack_modules__;
-/******/ 	
-/************************************************************************/
-/******/ 	/* webpack/runtime/chunk loaded */
-/******/ 	(() => {
-/******/ 		var deferred = [];
-/******/ 		__webpack_require__.O = (result, chunkIds, fn, priority) => {
-/******/ 			if(chunkIds) {
-/******/ 				priority = priority || 0;
-/******/ 				for(var i = deferred.length; i > 0 && deferred[i - 1][2] > priority; i--) deferred[i] = deferred[i - 1];
-/******/ 				deferred[i] = [chunkIds, fn, priority];
-/******/ 				return;
-/******/ 			}
-/******/ 			var notFulfilled = Infinity;
-/******/ 			for (var i = 0; i < deferred.length; i++) {
-/******/ 				var [chunkIds, fn, priority] = deferred[i];
-/******/ 				var fulfilled = true;
-/******/ 				for (var j = 0; j < chunkIds.length; j++) {
-/******/ 					if ((priority & 1 === 0 || notFulfilled >= priority) && Object.keys(__webpack_require__.O).every((key) => (__webpack_require__.O[key](chunkIds[j])))) {
-/******/ 						chunkIds.splice(j--, 1);
-/******/ 					} else {
-/******/ 						fulfilled = false;
-/******/ 						if(priority < notFulfilled) notFulfilled = priority;
-/******/ 					}
-/******/ 				}
-/******/ 				if(fulfilled) {
-/******/ 					deferred.splice(i--, 1)
-/******/ 					var r = fn();
-/******/ 					if (r !== undefined) result = r;
-/******/ 				}
-/******/ 			}
-/******/ 			return result;
-/******/ 		};
-/******/ 	})();
-/******/ 	
-/******/ 	/* webpack/runtime/hasOwnProperty shorthand */
-/******/ 	(() => {
-/******/ 		__webpack_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
-/******/ 	})();
-/******/ 	
-/******/ 	/* webpack/runtime/node module decorator */
-/******/ 	(() => {
-/******/ 		__webpack_require__.nmd = (module) => {
-/******/ 			module.paths = [];
-/******/ 			if (!module.children) module.children = [];
-/******/ 			return module;
-/******/ 		};
-/******/ 	})();
-/******/ 	
-/******/ 	/* webpack/runtime/jsonp chunk loading */
-/******/ 	(() => {
-/******/ 		// no baseURI
-/******/ 		
-/******/ 		// object to store loaded and loading chunks
-/******/ 		// undefined = chunk not loaded, null = chunk preloaded/prefetched
-/******/ 		// [resolve, reject, Promise] = chunk loading, 0 = chunk loaded
-/******/ 		var installedChunks = {
-/******/ 			"app": 0
-/******/ 		};
-/******/ 		
-/******/ 		// no chunk on demand loading
-/******/ 		
-/******/ 		// no prefetching
-/******/ 		
-/******/ 		// no preloaded
-/******/ 		
-/******/ 		// no HMR
-/******/ 		
-/******/ 		// no HMR manifest
-/******/ 		
-/******/ 		__webpack_require__.O.j = (chunkId) => (installedChunks[chunkId] === 0);
-/******/ 		
-/******/ 		// install a JSONP callback for chunk loading
-/******/ 		var webpackJsonpCallback = (parentChunkLoadingFunction, data) => {
-/******/ 			var [chunkIds, moreModules, runtime] = data;
-/******/ 			// add "moreModules" to the modules object,
-/******/ 			// then flag all "chunkIds" as loaded and fire callback
-/******/ 			var moduleId, chunkId, i = 0;
-/******/ 			if(chunkIds.some((id) => (installedChunks[id] !== 0))) {
-/******/ 				for(moduleId in moreModules) {
-/******/ 					if(__webpack_require__.o(moreModules, moduleId)) {
-/******/ 						__webpack_require__.m[moduleId] = moreModules[moduleId];
-/******/ 					}
-/******/ 				}
-/******/ 				if(runtime) var result = runtime(__webpack_require__);
-/******/ 			}
-/******/ 			if(parentChunkLoadingFunction) parentChunkLoadingFunction(data);
-/******/ 			for(;i < chunkIds.length; i++) {
-/******/ 				chunkId = chunkIds[i];
-/******/ 				if(__webpack_require__.o(installedChunks, chunkId) && installedChunks[chunkId]) {
-/******/ 					installedChunks[chunkId][0]();
-/******/ 				}
-/******/ 				installedChunks[chunkIds[i]] = 0;
-/******/ 			}
-/******/ 			return __webpack_require__.O(result);
-/******/ 		}
-/******/ 		
-/******/ 		var chunkLoadingGlobal = tt["webpackChunkmini_taro"] = tt["webpackChunkmini_taro"] || [];
-/******/ 		chunkLoadingGlobal.forEach(webpackJsonpCallback.bind(null, 0));
-/******/ 		chunkLoadingGlobal.push = webpackJsonpCallback.bind(null, chunkLoadingGlobal.push.bind(chunkLoadingGlobal));
-/******/ 	})();
-/******/ 	
-/************************************************************************/
-/******/ 	
-/******/ 	// startup
-/******/ 	// Load entry module and return exports
-/******/ 	// This entry module depends on other loaded chunks and execution need to be delayed
-/******/ 	var __webpack_exports__ = __webpack_require__.O(undefined, ["vendors"], () => (__webpack_require__("./app.ts")))
-/******/ 	__webpack_exports__ = __webpack_require__.O(__webpack_exports__);
-/******/ 	
-/******/ })()
-;
+},
+/******/ __webpack_require__ => { // webpackRuntimeModules
+/******/ var __webpack_exec__ = (moduleId) => (__webpack_require__(__webpack_require__.s = moduleId))
+/******/ __webpack_require__.O(0, ["vendors"], () => (__webpack_exec__("./build/app.ts")));
+/******/ var __webpack_exports__ = __webpack_require__.O();
+/******/ }
+]);
 //# sourceMappingURL=app.js.map

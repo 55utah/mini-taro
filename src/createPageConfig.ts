@@ -1,9 +1,11 @@
-import React, { ComponentClass } from "react"
+import { ComponentClass, FunctionComponent } from "react"
 import { getTaroRootElementByUid } from "./createAppConfig"
 import { MiniData } from "./interface"
 import { TaroRootElement } from "./taro-element"
 
-export const createPageConfig = (Component: ComponentClass, initData: Record<string, unknown>, pageConfig: { path: string }) => {
+type PageComponent = FunctionComponent | ComponentClass
+
+export const createPageConfig = (Component: PageComponent, initData: Record<string, unknown>, pageConfig: { path: string }) => {
   const { path } = pageConfig
   const pageUid = path
 
@@ -11,16 +13,15 @@ export const createPageConfig = (Component: ComponentClass, initData: Record<str
   try {
     app = getApp()
   } catch(e) {
-    console.warn(e)
+    console.error(e)
   }
 
-  let pageElement: TaroRootElement | undefined
   const getPageElement = () => {
     const rootElement = (app as any).getTree()
-    pageElement = getTaroRootElementByUid(rootElement, pageUid)
-    return pageElement
+    return getTaroRootElementByUid(rootElement, pageUid)
   }
 
+  // 所有事件汇总到一个方法上
   const eventHandler = (e: any) => {
     // 这里要使用currentTarget避免被冒泡影响
     const { type, currentTarget = {} } = e || {}
@@ -29,6 +30,7 @@ export const createPageConfig = (Component: ComponentClass, initData: Record<str
     if (id && pageElement?.ctx) {
       const ctx = pageElement?.ctx
       let propKey = ''
+      //  简单处理下事件，不做深入处理
       switch(type) {
         case 'tap': propKey = 'onClick'; break;
         case 'input': propKey = 'onInput'; break;
@@ -57,13 +59,16 @@ export const createPageConfig = (Component: ComponentClass, initData: Record<str
             pageElement.ctx = page
             pageElement.performUpdate()
           }
-          console.warn('app mounted')
         })
       },
       onShow: func('onShow'),
       onHide: func('onHide'),
       onReady: func('onReady'),
-      onUnload: func('onUnload'),
+      onUnload: function () {
+        app && app.unmount(pageUid, () => {
+          console.warn(`page: ${pageUid} unmount`)
+        })
+      },
       eh: eventHandler
     })
 
@@ -74,6 +79,7 @@ export const createPageConfig = (Component: ComponentClass, initData: Record<str
 }
 
 function func(name: string) {
+  // 这里可以将小程序生命周期与react生命周期对应
   return function (params: any) {
     console.warn(name, params)
   }

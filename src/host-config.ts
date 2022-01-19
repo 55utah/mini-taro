@@ -1,8 +1,6 @@
 // 这边要借助 react-reconciler 实现一套虚拟dom树的系统
 
-import { HostConfig } from 'react-reconciler'
-import ReactReconciler = require("react-reconciler")
-
+import ReactReconciler, { HostConfig } from 'react-reconciler'
 import { NodeName, NodeType, Props } from './interface'
 import { generate, NodeTypeMap, noop } from './util'
 import { TaroElement, TaroRootElement, TaroText } from './taro-element'
@@ -178,11 +176,11 @@ const hostConfig: HostConfig<
 
 const TaroReconciler = ReactReconciler(hostConfig)
 
-TaroReconciler.injectIntoDevTools({
-  bundleType: 1,
-  version: '0.0.1',
-  rendererPackageName: 'mini-taro'
-})
+// TaroReconciler.injectIntoDevTools({
+//   bundleType: 1,
+//   version: '0.0.1',
+//   rendererPackageName: 'mini-taro'
+// })
 
 export {
   TaroReconciler,

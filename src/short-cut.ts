@@ -1,6 +1,7 @@
 
 export const RootName = 'root'
 
+// 这里使用Taro的缩写
 export const enum Short {
   Container = "container",
   Childnodes = "cn",

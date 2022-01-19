@@ -3,21 +3,27 @@ import { NodeType, Props } from "./interface";
 import { render } from "./render"
 import { TaroElement, TaroRootElement } from "./taro-element";
 
-export interface ReactPageComponent<T = Props> extends ComponentClass<T> {
-  //
-}
+export interface ReactPageComponent<T = Props> extends ComponentClass<T> {}
 
-export const PageContext: Record<string, unknown> = {}
+const EMPTY_OBJ: any = {}
+
+let PageContext: React.Context<string> = EMPTY_OBJ
 
 const RootElement = new TaroElement({ id: Infinity, props: {}, nodeName: 'view', type: NodeType.ROOT })
 
 type PageElement = React.CElement<Props, React.Component<Props, any, any>>
+
 type PageComponent = () => PageElement
 
 const h = React.createElement
 
 const connectReactPage = (id: string) => {
   return (component: ReactPageComponent) => {
+
+    if (PageContext === EMPTY_OBJ) {
+      PageContext = React.createContext('')
+    }
+
     return class Page extends React.Component {
 
       componentDidCatch(err: any) {
@@ -25,6 +31,7 @@ const connectReactPage = (id: string) => {
       }
 
       render() {
+        // 名称是'root'的dom节点就是页面顶层节点了
         return h('root', { uid: id }, h(component, {}))
       }
     }
@@ -47,10 +54,12 @@ export const createAppConfig = (App: React.ComponentClass) => {
       this.forceUpdate(cb)
     }
 
-    // public unmount (id: string, cb: () => void) {
-    //   const 
-    //   this.forceUpdate(cb)
-    // }
+    public unmount (id: string, cb: () => void) {
+      const idx = this.elements.findIndex(item => item.props.tid === id)
+      this.elements.splice(idx, 1)
+
+      this.forceUpdate(cb)
+    }
 
     public render () {
       while (this.pages.length > 0) {
@@ -58,7 +67,7 @@ export const createAppConfig = (App: React.ComponentClass) => {
         this.elements.push(page())
       }
 
-      let props: React.Props<any> | null = null
+      const props: Record<string, unknown> | null = null
 
       return React.createElement(
         App,
@@ -73,21 +82,21 @@ export const createAppConfig = (App: React.ComponentClass) => {
   const createConfig = () => {
     // app的配置不能是一个复杂对象。。
     const config = Object.create({
-      render: function(cb: () => void) {
-        wrapper.forceUpdate(cb)
-      },
       mount: function(component: ReactPageComponent, id: string, cb: () => void) {
         const page = connectReactPage(id)(component)
         wrapper.mount(page, id, cb)
+      },
+      unmount: function(id: string, cb: () => void) {
+        wrapper.unmount(id, cb)
       },
       onLaunch: function(options: Record<string, unknown>) {
         console.warn('app onLaunch')
       },
       onShow: function(options: any) {
-        
+        //
       },
       onHide: function() {
-        
+        //
       },
       onError: function(msg: any) {
         console.log('app error', msg)
