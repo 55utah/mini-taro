@@ -23,19 +23,24 @@
 #### 体验
 
 1. 安装依赖（npm install或yarn）；
-2. yarn build构建，生成/更新dist文件夹，使用小程序IDE预览dist文件即可；
+2. （可先删除dist文件夹）执行yarn build构建，生成/更新dist文件夹，使用小程序IDE预览dist文件即可；
 3. 注意：本项目默认支持头条小程序，如果需支持其他小程序，要修改webpack.config.js如下配置：
 ```
-output: {
-  // ...
-  globalObject: 'wx' // 改为对应小程序的全局对象
+/**
+ * 【小程序类型配置】
+ * 对应小程序类型的配置，默认是字节小程序，其他小程序如微信小程序，需修改配置：
+ * const globalObject = 'wx'
+ * const fileType = {
+ *  templ: '.wxml',
+ *  style: '.wxss',
+ * }
+ */
+
+const globalObject = 'tt';
+const fileType = {
+  templ: '.ttml',
+  style: '.ttss',
 }
-plugins: [
-  new MiniCssExtractPlugin({
-     filename: "[name].wxss", // 改为对应小程序css文件后缀
-     // 另外如果要支持less/sass等可修改这个插件的配置，具体查看插件文档。
-  }),
-]
 
 ```
 
