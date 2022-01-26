@@ -181,14 +181,6 @@
   </view>
 </template>
 
-<template name="tmpl_0_editor">
-  <editor placeholder="{{i.placeholder}}" class="{{i.cl}}" style="{{i.st}}" adit-style="{{i.aditStyle}}" auto-height="{{i.autoHeight===undefined?false:i.autoHeight}}" contents="{{i.contents===undefined?{}:i.contents}}" plugins="{{i.plugins===undefined?[]:i.plugins}}" read-only="{{i.readOnly===undefined?false:i.readOnly}}" bindinput="eh" bindready="eh" bindinsertimage="eh" bindeditorclick="eh" bindgetfileinfo="eh" binduploadpasteimage="eh" bindmentionselect="eh" bindmentionclick="eh" bindblur="eh" bindtap="eh"  id="{{i.uid}}">
-    <block tt:for="{{i.cn}}" tt:key="uid">
-      <template is="tmpl_0_container" data="{{i:item}}" />
-    </block>
-  </editor>
-</template>
-
 <template name="tmpl_0_#text" data="{{i:i}}">
   <block>{{i.v}}</block>
 </template>

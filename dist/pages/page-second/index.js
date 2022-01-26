@@ -11,7 +11,7 @@
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const page_second_1 = __webpack_require__(/*! ../demo/pages/page-second */ "./demo/pages/page-second/index.tsx");
 const index_1 = __webpack_require__(/*! @/index */ "./src/index.ts");
-Page((0, index_1.createPageConfig)(page_second_1.SecondPage, { root: { nn: 'root' } }, { path: 'pages/page-second/index' }));
+Page((0, index_1.createPageConfig)(page_second_1.SecondPage, { root: { nn: '' } }, { path: 'pages/page-second/index' }));
 
 
 /***/ }),

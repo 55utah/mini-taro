@@ -23,7 +23,7 @@ __webpack_require__.r(__webpack_exports__);
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const page_entry_1 = __webpack_require__(/*! ../demo/pages/page-entry */ "./demo/pages/page-entry/index.tsx");
 const index_1 = __webpack_require__(/*! @/index */ "./src/index.ts");
-Page((0, index_1.createPageConfig)(page_entry_1.EntryPage, { root: { nn: 'root' } }, { path: 'pages/page-entry/index' }));
+Page((0, index_1.createPageConfig)(page_entry_1.EntryPage, { root: { nn: '' } }, { path: 'pages/page-entry/index' }));
 
 
 /***/ }),
