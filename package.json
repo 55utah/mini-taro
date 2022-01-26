@@ -4,7 +4,7 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "build": "webpack && node ./scripts/index.js"
+    "build": "rm -rf dist && webpack && node ./scripts/index.js"
   },
   "devDependencies": {
     "@types/react": "^17.0.38",

@@ -77,11 +77,18 @@ module.exports = {
           to: path.resolve(__dirname, `./dist/base${fileType.templ}`),
         },
         {
+          // page.ttml模版需要替换下引用的文件名
           from: path.resolve(__dirname, './scripts/template/page.ttml'),
+          transform: (content) => {
+            return content.toString().replace('%base%', `base${fileType.templ}`)
+          },
           to: path.resolve(__dirname, `./dist/pages/page-entry/index${fileType.templ}`),
         },
         {
           from: path.resolve(__dirname, './scripts/template/page.ttml'),
+          transform: (content) => {
+            return content.toString().replace('%base%', `base${fileType.templ}`)
+          },
           to: path.resolve(__dirname, `./dist/pages/page-second/index${fileType.templ}`),
         },
         {
