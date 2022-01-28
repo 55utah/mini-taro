@@ -4,7 +4,8 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "build": "rm -rf dist && webpack && node ./scripts/index.js"
+    "build": "npm run clean && webpack && node ./scripts/index.js",
+    "clean": "rimraf dist"
   },
   "devDependencies": {
     "@types/react": "^17.0.38",
@@ -12,6 +13,7 @@
     "copy-webpack-plugin": "^10.2.0",
     "css-loader": "^6.5.1",
     "mini-css-extract-plugin": "^2.5.2",
+    "rimraf": "^3.0.2",
     "ts-loader": "^9.2.6",
     "typescript": "^4.5.4",
     "webpack": "^5.65.0",
