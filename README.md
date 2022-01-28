@@ -43,7 +43,7 @@ const fileType = {
 }
 
 ```
-4. 关于windows下删除dist文件夹失败的情况，全局安装rimraf即可 `npm install rimraf -g`
+4. 关于windows下删除dist文件夹失败的情况，全局安装rimraf即可 `npm install rimraf -g`；
 
 #### 效果
 
