@@ -2,6 +2,7 @@
 
 import React, { FC, useState } from 'react'
 import { View, Text, Button, Input } from '@/index'
+import { native } from '../../util'
 
 import './index.css'
 
@@ -33,7 +34,7 @@ export const EntryPage: FC = () => {
   }
 
   const go = () => {
-    tt.navigateTo({
+    native.navigateTo({
       url: '/pages/page-second/index',
     })
   }

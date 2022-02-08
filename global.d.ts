@@ -7,7 +7,7 @@ declare function App(params: any): unknown
 declare const tt: any
 // 微信
 declare const wx: any
-// swan
+// 百度
 declare const swan: any
 // QQ
 declare const qq: any

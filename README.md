@@ -24,11 +24,11 @@
 
 1. 安装依赖（npm install或yarn）；
 2. 执行yarn build构建，（会先删除dist文件夹）生成新的dist文件夹，然后使用小程序IDE预览dist文件即可；
-3. 注意：本项目默认支持头条小程序，如果需支持其他小程序，要修改webpack.config.js如下配置：
+3. 注意：本项目默认支持头条小程序，另外支持微信小程序，编译微信小程序时要修改webpack.config.js如下配置：
 ```
 /**
  * 【小程序类型配置】
- * 对应小程序类型的配置，默认是字节小程序，其他小程序如微信小程序，需修改配置：
+ * 对应小程序类型的配置，默认是字节小程序，另外支持微信小程序，需修改配置：
  * const globalObject = 'wx'
  * const fileType = {
  *  templ: '.wxml',
@@ -43,7 +43,8 @@ const fileType = {
 }
 
 ```
-4. 关于windows下删除dist文件夹失败的情况，全局安装rimraf即可 `npm install rimraf -g`
+4. 关于windows下删除dist文件夹失败的情况，尝试全局安装rimraf `npm install rimraf -g`；
+5. 如果要支持头条小程序、微信小程序之外的小程序，参考[文档](./SUPPORT.md)；
 
 #### 效果
 

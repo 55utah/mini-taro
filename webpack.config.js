@@ -4,12 +4,13 @@ const CopyPlugin = require("copy-webpack-plugin");
 
 /**
  * 【小程序类型配置】
- * 对应小程序类型的配置，默认是字节小程序，其他小程序如微信小程序，需修改配置：
+ * 对应小程序类型的配置，默认是字节小程序，另外支持微信小程序，需修改配置：
  * const globalObject = 'wx'
  * const fileType = {
  *  templ: '.wxml',
  *  style: '.wxss',
  * }
+ * 目前只支持字节小程序和微信小程序，其他小程序需参考说明增加模版文件并修改配置。
  */
 
 const globalObject = 'tt';
@@ -72,9 +73,17 @@ module.exports = {
     // 模拟Taro构建出小程序文件的过程
     new CopyPlugin({
       patterns: [
-        {
+        globalObject === 'tt' && {
           from: path.resolve(__dirname, './scripts/template/base.ttml'),
-          to: path.resolve(__dirname, `./dist/base${fileType.templ}`),
+          to: path.resolve(__dirname, `./dist/base.ttml`),
+        },
+        globalObject === 'wx' && {
+          from: path.resolve(__dirname, './scripts/template/base.wxml'),
+          to: path.resolve(__dirname, `./dist/base.wxml`),
+        },
+        globalObject === 'wx' && {
+          from: path.resolve(__dirname, './scripts/template/utils.wxs'),
+          to: path.resolve(__dirname, `./dist/utils.wxs`),
         },
         {
           // page.ttml模版需要替换下引用的文件名
@@ -99,7 +108,7 @@ module.exports = {
           from: path.resolve(__dirname, './demo/app.config.json'),
           to: path.resolve(__dirname, './dist/app.json'),
         }
-      ]
+      ].filter(Boolean)
     })
   ],
   resolve: {

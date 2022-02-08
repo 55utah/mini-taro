@@ -59,6 +59,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.EntryPage = void 0;
 const react_1 = __importStar(__webpack_require__(/*! react */ "./node_modules/react/index.js"));
 const index_1 = __webpack_require__(/*! @/index */ "./src/index.ts");
+const util_1 = __webpack_require__(/*! ../../util */ "./demo/util.ts");
 __webpack_require__(/*! ./index.css */ "./demo/pages/page-entry/index.css");
 const EntryPage = () => {
     const [name, setName] = (0, react_1.useState)('');
@@ -83,7 +84,7 @@ const EntryPage = () => {
         setList((arr) => arr.length <= 1 ? arr : arr.slice(0, -1));
     };
     const go = () => {
-        tt.navigateTo({
+        util_1.native.navigateTo({
             url: '/pages/page-second/index',
         });
     };
@@ -112,6 +113,58 @@ const EntryPage = () => {
             react_1.default.createElement(index_1.Button, { type: "default", onClick: () => go() }, "\u53BB\u4E0B\u4E00\u4E2A\u9875\u9762"))));
 };
 exports.EntryPage = EntryPage;
+
+
+/***/ }),
+
+/***/ "./demo/util.ts":
+/*!**********************!*\
+  !*** ./demo/util.ts ***!
+  \**********************/
+/***/ ((__unused_webpack_module, exports) => {
+
+
+// tt/wx/qq等顶层对象处理
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.native = void 0;
+exports.native = ck1() || ck2() || ck3() || ck4() || ck5() || ck6() || error();
+function ck1() { try {
+    return tt;
+}
+catch (e) {
+    return undefined;
+} }
+function ck2() { try {
+    return wx;
+}
+catch (e) {
+    return undefined;
+} }
+function ck3() { try {
+    return qq;
+}
+catch (e) {
+    return undefined;
+} }
+function ck4() { try {
+    return jd;
+}
+catch (e) {
+    return undefined;
+} }
+function ck5() { try {
+    return my;
+}
+catch (e) {
+    return undefined;
+} }
+function ck6() { try {
+    return swan;
+}
+catch (e) {
+    return undefined;
+} }
+function error() { throw new Error('未支持的小程序类型'); }
 
 
 /***/ }),

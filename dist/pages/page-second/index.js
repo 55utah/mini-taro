@@ -47,16 +47,19 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const react_1 = __importStar(__webpack_require__(/*! react */ "./node_modules/react/index.js"));
 const index_1 = __webpack_require__(/*! @/index */ "./src/index.ts");
 const TestComp = () => {
-    const [num, setNum] = (0, react_1.useState)(1);
+    const [content, set] = (0, react_1.useState)('（准备更新function组件）');
     (0, react_1.useEffect)(() => {
         // 2s 后更新数字
-        setTimeout(() => {
-            setNum(300);
+        const t1 = setTimeout(() => {
+            set('（更新成功）');
         }, 2000);
+        return () => {
+            clearTimeout(t1);
+        };
     }, []);
-    return react_1.default.createElement(index_1.View, { style: { color: 'blue', marginTop: '10px' } },
-        react_1.default.createElement(index_1.Text, null, "\u8FD9\u91CC\u662Ffunction\u7EC4\u4EF6: "),
-        react_1.default.createElement(index_1.Text, null, num));
+    return react_1.default.createElement(index_1.View, { style: { color: 'blue', marginTop: '10px', border: '1px solid red' } },
+        react_1.default.createElement(index_1.Text, null, "\u8FD9\u91CC\u662Ffunction\u7EC4\u4EF6"),
+        react_1.default.createElement(index_1.Text, null, content));
 };
 exports["default"] = TestComp;
 
@@ -79,6 +82,7 @@ exports.SecondPage = void 0;
 const react_1 = __importDefault(__webpack_require__(/*! react */ "./node_modules/react/index.js"));
 const index_1 = __webpack_require__(/*! @/index */ "./src/index.ts");
 const test_comp_1 = __importDefault(__webpack_require__(/*! ../../component/test-comp */ "./demo/component/test-comp.tsx"));
+const util_1 = __webpack_require__(/*! ../../util */ "./demo/util.ts");
 class SecondPage extends react_1.default.Component {
     constructor(props) {
         super(props);
@@ -90,7 +94,7 @@ class SecondPage extends react_1.default.Component {
         this.setState({ text: '今天是好天气' });
     }
     returnEntry() {
-        tt.navigateBack();
+        util_1.native.navigateBack();
     }
     render() {
         return react_1.default.createElement(index_1.View, { className: "wrapper", style: { marginTop: '20px', padding: '10px' } },
@@ -101,6 +105,58 @@ class SecondPage extends react_1.default.Component {
     }
 }
 exports.SecondPage = SecondPage;
+
+
+/***/ }),
+
+/***/ "./demo/util.ts":
+/*!**********************!*\
+  !*** ./demo/util.ts ***!
+  \**********************/
+/***/ ((__unused_webpack_module, exports) => {
+
+
+// tt/wx/qq等顶层对象处理
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.native = void 0;
+exports.native = ck1() || ck2() || ck3() || ck4() || ck5() || ck6() || error();
+function ck1() { try {
+    return tt;
+}
+catch (e) {
+    return undefined;
+} }
+function ck2() { try {
+    return wx;
+}
+catch (e) {
+    return undefined;
+} }
+function ck3() { try {
+    return qq;
+}
+catch (e) {
+    return undefined;
+} }
+function ck4() { try {
+    return jd;
+}
+catch (e) {
+    return undefined;
+} }
+function ck5() { try {
+    return my;
+}
+catch (e) {
+    return undefined;
+} }
+function ck6() { try {
+    return swan;
+}
+catch (e) {
+    return undefined;
+} }
+function error() { throw new Error('未支持的小程序类型'); }
 
 
 /***/ }),

@@ -3,6 +3,7 @@
 import React from 'react'
 import { View, Text, Button } from '@/index'
 import TestFunctionComp from '../../component/test-comp'
+import { native } from '../../util'
 
 export class SecondPage extends React.Component<unknown, { text: string }> {
 
@@ -18,7 +19,7 @@ export class SecondPage extends React.Component<unknown, { text: string }> {
   }
 
   public returnEntry() {
-    tt.navigateBack()
+    native.navigateBack()
   }
 
   render() {
