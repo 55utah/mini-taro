@@ -43,7 +43,7 @@ const fileType = {
 }
 
 ```
-4. 关于windows下删除dist文件夹失败的情况，尝试全局安装rimraf `npm install rimraf -g`；
+4. 关于windows下删除dist文件夹失败的情况，尝试全局安装rimraf: `npm install rimraf -g`；
 5. 如果要支持头条小程序、微信小程序之外的小程序，参考[文档](./SUPPORT.md)；
 
 #### 效果
