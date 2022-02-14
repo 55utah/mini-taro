@@ -6,7 +6,8 @@
 
 1. 基本运行时能力与Taro接近，支持将多个react语法构建的页面渲染到小程序上；
 2. 支持react类组件，react函数组件，支持react hooks；支持使用css样式文件；
-3. mini-taro侧重于运行时，构建层做简单实现；
+3. 实现了基本的事件系统、生命周期系统；支持useReady/useDidShow/useDidHide等hooks；
+4. mini-taro侧重于运行时，构建层做简单实现；
 
 #### 文件夹层级说明
 ```
