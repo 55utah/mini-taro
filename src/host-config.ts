@@ -20,6 +20,27 @@ export function updateProps (dom: TaroElement, oldProps: Props, newProps: Props)
   }
 }
 
+function isEventName (s: string) {
+  return s[0] === 'o' && s[1] === 'n'
+}
+
+function setEvent(dom: TaroElement, name: string, value: unknown) {
+  let eventName = name.toLowerCase().slice(2)
+
+  if (eventName === 'click') {
+    eventName = 'tap'
+  }
+
+  if (typeof value === 'function') {
+    dom.addEventListener(eventName, value)
+  } else {
+    dom.removeEventListener(eventName)
+  }
+}
+
+/** 
+ * 判断属性，处理属性
+ */
 function setProperty (dom: TaroElement, name: string, value: unknown, oldValue?: unknown) {
   // className转class
   name = name === 'className' ? 'class' : name
@@ -31,14 +52,10 @@ function setProperty (dom: TaroElement, name: string, value: unknown, oldValue?:
   ) {
     // 跳过
   } else if (name === 'style') {
-    // TODO 处理style
-  } else if (/^on[A-Z]+/.test(name)) {
-    // 事件 onClick等 TODO 这里需要统一管理这些事件
-    // 以onclick举例
-    // if (name === 'onClick') {
-      // 这里是另一种处理事件的方式
-      // dom.setAttribute('bindtap', value as string)
-    // }
+    // TODO 需要处理style的变化
+  } else if (isEventName(name)) {
+    // 事件 onClick等
+    setEvent(dom, name, value)
   } else if (value == null) {
     dom.removeAttribute(name)
   } else {

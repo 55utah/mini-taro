@@ -69,6 +69,24 @@ const EntryPage = () => {
         { key: 2, value: '这是第2个' },
         { key: 3, value: '这是第3个' },
     ]);
+    (0, react_1.useEffect)(() => {
+        console.log('[useEffect] Page Entry loaded!');
+        return () => {
+            console.log('[useEffect] Page Entry destroyed!');
+        };
+    }, []);
+    // useReady Hook
+    (0, index_1.useReady)(() => {
+        console.log('[useReady] Page Entry ready');
+    });
+    // useDidShow
+    (0, index_1.useDidShow)(() => {
+        console.log('[useDidShow] Page Entry show');
+    });
+    // useDidHide
+    (0, index_1.useDidHide)(() => {
+        console.log('[useDidHide] Page Entry hide');
+    });
     const increment = () => {
         setCount((val) => val + 1);
     };
@@ -180,27 +198,35 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getTaroRootElementByUid = exports.createAppConfig = void 0;
+exports.getTaroElementById = exports.getTaroRootElementByUid = exports.createAppConfig = exports.PageContext = void 0;
 const react_1 = __importDefault(__webpack_require__(/*! react */ "./node_modules/react/index.js"));
 const interface_1 = __webpack_require__(/*! ./interface */ "./src/interface.ts");
 const render_1 = __webpack_require__(/*! ./render */ "./src/render.ts");
 const taro_element_1 = __webpack_require__(/*! ./taro-element */ "./src/taro-element.ts");
-const EMPTY_OBJ = {};
-let PageContext = EMPTY_OBJ;
-const RootElement = new taro_element_1.TaroElement({ id: Infinity, props: {}, nodeName: 'view', type: interface_1.NodeType.ROOT });
+const RootElement = new taro_element_1.TaroElement({
+    id: Infinity,
+    props: {},
+    nodeName: 'view',
+    type: interface_1.NodeType.ROOT,
+});
 const h = react_1.default.createElement;
+const EMPTY_OBJ = {};
+exports.PageContext = EMPTY_OBJ;
 const connectReactPage = (id) => {
     return (component) => {
-        if (PageContext === EMPTY_OBJ) {
-            PageContext = react_1.default.createContext('');
+        if (exports.PageContext === EMPTY_OBJ) {
+            exports.PageContext = react_1.default.createContext('');
         }
         return class Page extends react_1.default.Component {
-            componentDidCatch(err) {
-                console.error('page global error: ', err);
+            componentDidCatch(error, info) {
+                if (true) {
+                    console.warn(error);
+                    console.error(info.componentStack);
+                }
             }
             render() {
-                // 名称是'root'的dom节点就是页面顶层节点了
-                return h('root', { uid: id }, h(component, {}));
+                // 名称是'root'的dom节点就是页面顶层节点了，在hostConfig中处理成不同节点
+                return h('root', { pageId: id }, h(exports.PageContext.Provider, { value: id }, h(component, Object.assign({}, this.props))));
             }
         };
     };
@@ -221,7 +247,7 @@ const createAppConfig = (App) => {
             this.forceUpdate(cb);
         }
         unmount(id, cb) {
-            const idx = this.elements.findIndex(item => item.props.tid === id);
+            const idx = this.elements.findIndex((item) => item.props.tid === id);
             this.elements.splice(idx, 1);
             this.forceUpdate(cb);
         }
@@ -259,32 +285,53 @@ const createAppConfig = (App) => {
             },
             getTree: function () {
                 return RootElement;
-            }
+            },
         });
         return config;
     };
     return createConfig();
 };
 exports.createAppConfig = createAppConfig;
-// 页面顶层元素是TaroRootElement props内包含一个uid是路径
+// 页面顶层元素是TaroRootElement props内包含一个pageId，值是当前页面路径
+// 查找指定的页面root元素
 function getTaroRootElementByUid(rootElement, uid) {
+    var _a;
+    const queue = [];
+    let target = undefined;
+    // 广度优先查找
+    queue.push(rootElement);
+    while (queue.length > 0) {
+        const t = queue.shift();
+        if (t.getAttribute('pageId') === uid) {
+            target = t;
+            break;
+        }
+        else {
+            (_a = t.children) === null || _a === void 0 ? void 0 : _a.map((item) => queue.push(item));
+        }
+    }
+    return target;
+}
+exports.getTaroRootElementByUid = getTaroRootElementByUid;
+// 查找指定的页面内元素
+function getTaroElementById(rootElement, id) {
     var _a;
     const queue = [];
     let target = undefined;
     queue.push(rootElement);
     while (queue.length > 0) {
         const t = queue.shift();
-        if (t.getAttribute('uid') === uid) {
+        if (t.getAttribute('uid') === id) {
             target = t;
             break;
         }
         else {
-            (_a = t.children) === null || _a === void 0 ? void 0 : _a.map(item => queue.push(item));
+            (_a = t.children) === null || _a === void 0 ? void 0 : _a.map((item) => queue.push(item));
         }
     }
     return target;
 }
-exports.getTaroRootElementByUid = getTaroRootElementByUid;
+exports.getTaroElementById = getTaroElementById;
 
 
 /***/ }),
@@ -293,12 +340,17 @@ exports.getTaroRootElementByUid = getTaroRootElementByUid;
 /*!*********************************!*\
   !*** ./src/createPageConfig.ts ***!
   \*********************************/
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.createPageConfig = void 0;
+exports.taroHook = exports.createPageConfig = void 0;
+const react_1 = __importDefault(__webpack_require__(/*! react */ "./node_modules/react/index.js"));
 const createAppConfig_1 = __webpack_require__(/*! ./createAppConfig */ "./src/createAppConfig.ts");
+const util_1 = __webpack_require__(/*! ./util */ "./src/util.ts");
 const createPageConfig = (Component, initData, pageConfig) => {
     const { path } = pageConfig;
     const pageUid = path;
@@ -313,88 +365,110 @@ const createPageConfig = (Component, initData, pageConfig) => {
         const rootElement = app.getTree();
         return (0, createAppConfig_1.getTaroRootElementByUid)(rootElement, pageUid);
     };
+    const getElement = (id) => {
+        const rootElement = app.getTree();
+        return (0, createAppConfig_1.getTaroElementById)(rootElement, id);
+    };
     // 所有事件汇总到一个方法上
     const eventHandler = (e) => {
-        var _a;
-        // 这里要使用currentTarget避免被冒泡影响
-        const { type, currentTarget = {} } = e || {};
+        // 这里使用currentTarget是为了避免被冒泡影响
+        const { type: eventName, currentTarget = {} } = e || {};
         const { id = '' } = currentTarget;
         const pageElement = getPageElement();
         if (id && (pageElement === null || pageElement === void 0 ? void 0 : pageElement.ctx)) {
-            const ctx = pageElement === null || pageElement === void 0 ? void 0 : pageElement.ctx;
-            let propKey = '';
-            //  简单处理下事件，不做深入处理
-            switch (type) {
-                case 'tap':
-                    propKey = 'onClick';
-                    break;
-                case 'input':
-                    propKey = 'onInput';
-                    break;
-                default: break;
-            }
-            if (propKey) {
-                const data = getMiniDataByUid((_a = ctx === null || ctx === void 0 ? void 0 : ctx.data) === null || _a === void 0 ? void 0 : _a.root, id);
-                const fn = data[propKey];
-                typeof fn === 'function' && fn(e);
-            }
+            const currentElement = getElement(id);
+            if (!currentElement)
+                return;
+            currentElement.dispatchEvent(eventName, e);
         }
     };
     const createConfig = () => {
         const config = Object.create({
-            element: Component,
             data: initData,
             onLoad: function (options) {
                 console.warn('page onLoad', options);
                 // 小程序page实例
                 const page = this;
                 this.$taroPath = pageUid;
-                app && app.mount(Component, this.$taroPath, () => {
-                    const pageElement = getPageElement();
-                    if (pageElement) {
-                        pageElement.ctx = page;
-                        pageElement.performUpdate();
-                    }
-                });
+                app &&
+                    app.mount(Component, this.$taroPath, () => {
+                        const pageElement = getPageElement();
+                        if (pageElement) {
+                            pageElement.ctx = page;
+                            pageElement.performUpdate();
+                        }
+                    });
             },
-            onShow: func('onShow'),
-            onHide: func('onHide'),
-            onReady: func('onReady'),
+            onShow: function () {
+                safeExecute('onShow', pageUid);
+            },
+            onHide: function () {
+                safeExecute('onHide', pageUid);
+            },
+            onReady: function () {
+                safeExecute('onReady', pageUid);
+            },
             onUnload: function () {
-                app && app.unmount(pageUid, () => {
-                    console.warn(`page: ${pageUid} unmount`);
-                });
+                app &&
+                    app.unmount(pageUid, () => {
+                        console.warn(`page: ${pageUid} unmount`);
+                    });
             },
-            eh: eventHandler
+            eh: eventHandler,
         });
         return config;
     };
     return createConfig();
 };
 exports.createPageConfig = createPageConfig;
-function func(name) {
-    // 这里可以将小程序生命周期与react生命周期对应
-    return function (params) {
-        console.warn(name, params);
+const hooks = new Map();
+function safeExecute(lifeCycle, uid) {
+    // 这里可以将小程序生命周期hook执行
+    if (!hooks.has(uid))
+        return;
+    const target = hooks.get(uid);
+    const cb = target.get(lifeCycle);
+    if (cb && (0, util_1.isFunction)(cb)) {
+        cb.call(null);
+    }
+}
+function taroHook(lifeCycle) {
+    return (cb) => {
+        // 这样拿到对应页面的uid
+        const id = react_1.default.useContext(createAppConfig_1.PageContext);
+        const cbRef = react_1.default.useRef(cb);
+        react_1.default.useLayoutEffect(() => {
+            if (!(0, util_1.isFunction)(cbRef.current))
+                return;
+            if (!hooks.has(id))
+                hooks.set(id, new Map());
+            const map = hooks.get(id);
+            map.set(lifeCycle, cbRef.current);
+        }, []);
     };
 }
-function getMiniDataByUid(root, uid) {
-    var _a, _b;
-    const queue = [];
-    queue.push(...((root === null || root === void 0 ? void 0 : root.cn) || []));
-    let target = undefined;
-    while (queue.length > 0) {
-        const t = queue.shift();
-        if (((_a = t) === null || _a === void 0 ? void 0 : _a.uid) === uid) {
-            target = t;
-            break;
-        }
-        else {
-            (_b = t.cn) === null || _b === void 0 ? void 0 : _b.map((item) => queue.push(item));
-        }
-    }
-    return target;
-}
+exports.taroHook = taroHook;
+
+
+/***/ }),
+
+/***/ "./src/hooks.ts":
+/*!**********************!*\
+  !*** ./src/hooks.ts ***!
+  \**********************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.useDidHide = exports.useDidShow = exports.useReady = void 0;
+/**
+ * 这里实现的hook对应Taro提供的hook
+ * 参考这些hook可以实现出任意需要的业务hook，比如useShareAppMessage，usePageScroll等
+ */
+const createPageConfig_1 = __webpack_require__(/*! ./createPageConfig */ "./src/createPageConfig.ts");
+exports.useReady = (0, createPageConfig_1.taroHook)('onReady');
+exports.useDidShow = (0, createPageConfig_1.taroHook)('onShow');
+exports.useDidHide = (0, createPageConfig_1.taroHook)('onHide');
 
 
 /***/ }),
@@ -431,6 +505,24 @@ function updateProps(dom, oldProps, newProps) {
     }
 }
 exports.updateProps = updateProps;
+function isEventName(s) {
+    return s[0] === 'o' && s[1] === 'n';
+}
+function setEvent(dom, name, value) {
+    let eventName = name.toLowerCase().slice(2);
+    if (eventName === 'click') {
+        eventName = 'tap';
+    }
+    if (typeof value === 'function') {
+        dom.addEventListener(eventName, value);
+    }
+    else {
+        dom.removeEventListener(eventName);
+    }
+}
+/**
+ * 判断属性，处理属性
+ */
 function setProperty(dom, name, value, oldValue) {
     // className转class
     name = name === 'className' ? 'class' : name;
@@ -440,15 +532,11 @@ function setProperty(dom, name, value, oldValue) {
         // 跳过
     }
     else if (name === 'style') {
-        // TODO 处理style
+        // TODO 需要处理style的变化
     }
-    else if (/^on[A-Z]+/.test(name)) {
-        // 事件 onClick等 TODO 这里需要统一管理这些事件
-        // 以onclick举例
-        // if (name === 'onClick') {
-        // 这里是另一种处理事件的方式
-        // dom.setAttribute('bindtap', value as string)
-        // }
+    else if (isEventName(name)) {
+        // 事件 onClick等
+        setEvent(dom, name, value);
     }
     else if (value == null) {
         dom.removeAttribute(name);
@@ -570,11 +658,13 @@ var __rest = (this && this.__rest) || function (s, e) {
     return t;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.styleTransform = exports.hydrate = void 0;
+exports.styleTransform = exports.hydrate = exports.generateUid = void 0;
 const interface_1 = __webpack_require__(/*! ./interface */ "./src/interface.ts");
 const isEmpty = (children) => {
     return !children || (Array.isArray(children) && children.length === 0);
 };
+const generateUid = (id) => `u-${id}`;
+exports.generateUid = generateUid;
 /**
  *
  * 这个函数是将虚拟dom树转为了渲染属性树
@@ -598,7 +688,7 @@ const hydrate = (node) => {
                 styleContent += `${(0, exports.styleTransform)(key)}: ${value};`;
             }
         }
-        return Object.assign({ ["cn" /* Childnodes */]: !!children && Array.isArray(children) ? children.map(exports.hydrate) : [], ["nn" /* NodeName */]: nodeName, ["cl" /* Class */]: className || '', ["st" /* Style */]: styleContent, uid: `u-${id}` }, nextProps);
+        return Object.assign({ ["cn" /* Childnodes */]: !!children && Array.isArray(children) ? children.map(exports.hydrate) : [], ["nn" /* NodeName */]: nodeName, ["cl" /* Class */]: className || '', ["st" /* Style */]: styleContent, uid: (0, exports.generateUid)(id) }, nextProps);
     }
 };
 exports.hydrate = hydrate;
@@ -638,6 +728,7 @@ var createPageConfig_1 = __webpack_require__(/*! ./createPageConfig */ "./src/cr
 Object.defineProperty(exports, "createPageConfig", ({ enumerable: true, get: function () { return createPageConfig_1.createPageConfig; } }));
 var createAppConfig_1 = __webpack_require__(/*! ./createAppConfig */ "./src/createAppConfig.ts");
 Object.defineProperty(exports, "createAppConfig", ({ enumerable: true, get: function () { return createAppConfig_1.createAppConfig; } }));
+__exportStar(__webpack_require__(/*! ./hooks */ "./src/hooks.ts"), exports);
 __exportStar(__webpack_require__(/*! ./native-components */ "./src/native-components.ts"), exports);
 
 
@@ -767,11 +858,16 @@ const hydrate_1 = __webpack_require__(/*! ./hydrate */ "./src/hydrate.ts");
 class TaroElement {
     constructor(params) {
         this.parentNode = null;
+        this.__handlers = new Map();
         const { id, type, nodeName, props, children, text } = params;
         this.id = id;
         this.type = type;
         this.nodeName = nodeName;
-        this.props = Object.assign({}, props);
+        this.props = Object.assign({ uid: (0, hydrate_1.generateUid)(id) }, props);
+        // props中的children是冗余数据
+        if (this.props['children']) {
+            delete this.props['children'];
+        }
         this.children = children;
         this.text = text;
     }
@@ -852,6 +948,20 @@ class TaroElement {
             value: this.children.map(hydrate_1.hydrate),
         });
     }
+    addEventListener(eventName, value) {
+        this.__handlers.set(eventName, value);
+    }
+    removeEventListener(eventName) {
+        this.__handlers.delete(eventName);
+    }
+    // 触发事件（忽略冒泡和捕获）
+    // taro3内部会二次封装这个事件，处理冒泡等行为，此处简化
+    dispatchEvent(eventName, e) {
+        if (this.__handlers.has(eventName)) {
+            const fn = this.__handlers.get(eventName);
+            typeof fn === 'function' && fn(e);
+        }
+    }
 }
 exports.TaroElement = TaroElement;
 class TaroText extends TaroElement {
@@ -925,7 +1035,7 @@ exports.TaroRootElement = TaroRootElement;
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.NodeTypeMap = exports.noop = exports.generate = exports.reset = void 0;
+exports.isFunction = exports.NodeTypeMap = exports.noop = exports.generate = exports.reset = void 0;
 const interface_1 = __webpack_require__(/*! ./interface */ "./src/interface.ts");
 let instanceId = 0;
 function reset() {
@@ -945,6 +1055,8 @@ exports.NodeTypeMap = {
     'text': interface_1.NodeType.TEXT,
     'root': interface_1.NodeType.ROOT
 };
+const isFunction = (target) => typeof target === 'function';
+exports.isFunction = isFunction;
 
 
 /***/ })

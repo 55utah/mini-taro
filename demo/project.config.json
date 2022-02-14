@@ -1,8 +1,8 @@
 {
   "miniprogramRoot": ".",
-  "projectname": "xxx",
-  "description": "小程序",
-  "appid": "cli_xxx",
+  "projectname": "mini-taro",
+  "description": "mini-taro小程序",
+  "appid": "cli_1234567890abc",
   "setting": {
     "urlCheck": true,
     "es6": false,

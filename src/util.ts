@@ -19,3 +19,5 @@ export const NodeTypeMap: any = {
   'text': NodeType.TEXT,
   'root': NodeType.ROOT
 }
+
+export const isFunction = (target: unknown) => typeof target === 'function'

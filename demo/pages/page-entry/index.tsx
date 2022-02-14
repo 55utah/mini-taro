@@ -1,7 +1,7 @@
 // function组件页面的实例
 
-import React, { FC, useState } from 'react'
-import { View, Text, Button, Input } from '@/index'
+import React, { FC, useState, useEffect } from 'react'
+import { View, Text, Button, Input, useReady, useDidHide, useDidShow } from '@/index'
 import { native } from '../../util'
 
 import './index.css'
@@ -15,6 +15,28 @@ export const EntryPage: FC = () => {
     { key: 2, value: '这是第2个' },
     { key: 3, value: '这是第3个' },
   ])
+
+  useEffect(() => {
+    console.log('[useEffect] Page Entry loaded!')
+    return () => {
+      console.log('[useEffect] Page Entry destroyed!')
+    }
+  }, [])
+
+  // useReady Hook
+  useReady(() => {
+    console.log('[useReady] Page Entry ready')
+  })
+
+  // useDidShow
+  useDidShow(() => {
+    console.log('[useDidShow] Page Entry show')
+  })
+
+  // useDidHide
+  useDidHide(() => {
+    console.log('[useDidHide] Page Entry hide')
+  })
 
   const increment = () => {
     setCount((val) => val + 1)

@@ -17,3 +17,5 @@ declare const jd: any
 declare const my: any
 
 declare function getApp(): unknown
+
+declare function getCurrentPages(): any[]

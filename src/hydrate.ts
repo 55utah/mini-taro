@@ -6,6 +6,8 @@ const isEmpty = (children: any[] | undefined) => {
   return !children || (Array.isArray(children) && children.length === 0)
 }
 
+export const generateUid = (id: number) => `u-${id}`
+
 /**
  * 
  * 这个函数是将虚拟dom树转为了渲染属性树
@@ -35,7 +37,7 @@ export const hydrate = (node: TaroElement): MiniData => {
       [Short.NodeName]: nodeName,
       [Short.Class]: className as string || '',
       [Short.Style]: styleContent as string,
-      uid: `u-${id}`,
+      uid: generateUid(id),
       ...nextProps,
     }
   }

@@ -1,75 +1,85 @@
-import { ComponentClass, FunctionComponent } from "react"
-import { getTaroRootElementByUid } from "./createAppConfig"
-import { MiniData } from "./interface"
-import { TaroRootElement } from "./taro-element"
+import React, { ComponentClass, FunctionComponent } from 'react'
+import {
+  getTaroElementById,
+  getTaroRootElementByUid,
+  PageContext,
+} from './createAppConfig'
+import { TaroRootElement } from './taro-element'
+import { isFunction } from './util'
 
 type PageComponent = FunctionComponent | ComponentClass
 
-export const createPageConfig = (Component: PageComponent, initData: Record<string, unknown>, pageConfig: { path: string }) => {
+export const createPageConfig = (
+  Component: PageComponent,
+  initData: Record<string, unknown>,
+  pageConfig: { path: string },
+) => {
   const { path } = pageConfig
   const pageUid = path
 
   let app: any = null
   try {
     app = getApp()
-  } catch(e) {
+  } catch (e) {
     console.error(e)
   }
 
   const getPageElement = () => {
     const rootElement = (app as any).getTree()
-    return getTaroRootElementByUid(rootElement, pageUid)
+    return getTaroRootElementByUid(rootElement, pageUid) as TaroRootElement
+  }
+
+  const getElement = (id: string) => {
+    const rootElement = (app as any).getTree()
+    return getTaroElementById(rootElement, id)
   }
 
   // 所有事件汇总到一个方法上
   const eventHandler = (e: any) => {
-    // 这里要使用currentTarget避免被冒泡影响
-    const { type, currentTarget = {} } = e || {}
+    // 这里使用currentTarget是为了避免被冒泡影响
+    const { type: eventName, currentTarget = {} } = e || {}
     const { id = '' } = currentTarget
     const pageElement = getPageElement()
     if (id && pageElement?.ctx) {
-      const ctx = pageElement?.ctx
-      let propKey = ''
-      //  简单处理下事件，不做深入处理
-      switch(type) {
-        case 'tap': propKey = 'onClick'; break;
-        case 'input': propKey = 'onInput'; break;
-        default: break;
-      }
-      if (propKey) {
-        const data = getMiniDataByUid(ctx?.data?.root, id) as any
-        const fn = data[propKey]
-        typeof fn === 'function' && fn(e)
-      }
+      const currentElement = getElement(id)
+      if (!currentElement) return
+      currentElement.dispatchEvent(eventName, e)
     }
   }
 
   const createConfig = () => {
     const config = Object.create({
-      element: Component,
       data: initData,
-      onLoad: function (options: unknown){
+      onLoad: function (options: unknown) {
         console.warn('page onLoad', options)
         // 小程序page实例
         const page = this
         this.$taroPath = pageUid
-        app && app.mount(Component, this.$taroPath, () => {
-          const pageElement = getPageElement()
-          if (pageElement) {
-            pageElement.ctx = page
-            pageElement.performUpdate()
-          }
-        })
+        app &&
+          app.mount(Component, this.$taroPath, () => {
+            const pageElement = getPageElement()
+            if (pageElement) {
+              pageElement.ctx = page
+              pageElement.performUpdate()
+            }
+          })
       },
-      onShow: func('onShow'),
-      onHide: func('onHide'),
-      onReady: func('onReady'),
+      onShow: function() {
+        safeExecute('onShow', pageUid)
+      },
+      onHide: function() {
+        safeExecute('onHide', pageUid)
+      },
+      onReady: function() {
+        safeExecute('onReady', pageUid)
+      },
       onUnload: function () {
-        app && app.unmount(pageUid, () => {
-          console.warn(`page: ${pageUid} unmount`)
-        })
+        app &&
+          app.unmount(pageUid, () => {
+            console.warn(`page: ${pageUid} unmount`)
+          })
       },
-      eh: eventHandler
+      eh: eventHandler,
     })
 
     return config
@@ -78,25 +88,29 @@ export const createPageConfig = (Component: PageComponent, initData: Record<stri
   return createConfig()
 }
 
-function func(name: string) {
-  // 这里可以将小程序生命周期与react生命周期对应
-  return function (params: any) {
-    console.warn(name, params)
+const hooks = new Map<string, Map<string, Function>>()
+
+function safeExecute(lifeCycle: string, uid: string) {
+  // 这里可以将小程序生命周期hook执行
+  if (!hooks.has(uid)) return
+  const target = hooks.get(uid)!
+  const cb = target.get(lifeCycle)
+  if (cb && isFunction(cb)) {
+    cb.call(null)
   }
 }
 
-function getMiniDataByUid(root: { cn: MiniData[] }, uid: string): MiniData | undefined {
-  const queue: MiniData[] = []
-  queue.push(...(root?.cn || []))
-  let target: MiniData | undefined = undefined
-  while(queue.length > 0) {
-    const t = queue.shift()!
-    if ((t as any)?.uid === uid) {
-      target = t
-      break
-    } else {
-      (t as any).cn?.map((item: MiniData) => queue.push(item))
-    }
+export function taroHook(lifeCycle: string) {
+  return (cb: Function) => {
+    // 这样拿到对应页面的uid
+    const id = React.useContext(PageContext)
+    const cbRef = React.useRef(cb)
+
+    React.useLayoutEffect(() => {
+      if (!isFunction(cbRef.current)) return
+      if (!hooks.has(id)) hooks.set(id, new Map())
+      const map = hooks.get(id)!
+      map.set(lifeCycle, cbRef.current)
+    }, [])
   }
-  return target
 }

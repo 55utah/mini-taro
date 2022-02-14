@@ -70,7 +70,7 @@ module.exports = {
     new MiniCssExtractPlugin({
       filename: `[name]${fileType.style}`,
     }),
-    // 模拟Taro构建出小程序文件的过程
+    // 模拟Taro构建出小程序文件的过程，并将taro生成的小程序模版直接拿来用.
     new CopyPlugin({
       patterns: [
         globalObject === 'tt' && {

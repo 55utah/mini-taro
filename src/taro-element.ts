@@ -1,6 +1,6 @@
 import { MpInstance, NodeName, NodeType, Props, UpdatePayload } from "./interface";
 import { RootName, Short } from "./short-cut";
-import { hydrate } from "./hydrate";
+import { generateUid, hydrate } from "./hydrate";
 
 export class TaroElement {
 
@@ -13,6 +13,7 @@ export class TaroElement {
   public children?: TaroElement[];
   public text?: string;
   public parentNode: TaroElement | null = null
+  public __handlers: Map<string, Function> = new Map()
 
   constructor(params: {
     id: number;
@@ -26,7 +27,11 @@ export class TaroElement {
     this.id = id
     this.type = type
     this.nodeName = nodeName
-    this.props = Object.assign({}, props)
+    this.props = Object.assign({ uid: generateUid(id) }, props)
+    // props中的children是冗余数据
+    if (this.props['children']) {
+      delete this.props['children']
+    }
     this.children = children
     this.text = text
   }
@@ -102,6 +107,23 @@ export class TaroElement {
       path: `${this._path}.${Short.Childnodes}`,
       value: this.children.map(hydrate),
     })
+  }
+
+  addEventListener(eventName: string, value: Function) {
+    this.__handlers.set(eventName, value)
+  }
+
+  removeEventListener(eventName: string) {
+    this.__handlers.delete(eventName)
+  }
+
+  // 触发事件（忽略冒泡和捕获）
+  // taro3内部会二次封装这个事件，处理冒泡等行为，此处简化
+  dispatchEvent(eventName: string, e: unknown) {
+    if (this.__handlers.has(eventName)) {
+      const fn = this.__handlers.get(eventName)
+      typeof fn === 'function' && fn(e)
+    }
   }
 }
 
